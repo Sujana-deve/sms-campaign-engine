@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SMS Campaign Manager{% endblock %}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; color: #333; }
+        nav { background: #1a1a2e; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+        nav h1 { color: #fff; font-size: 20px; font-weight: 600; }
+        nav a { color: #a0aec0; text-decoration: none; font-size: 14px; margin-left: 24px; }
+        nav a:hover { color: #fff; }
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 24px; }
+        .btn { display: inline-block; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; border: none; }
+        .btn-primary { background: #4f46e5; color: #fff; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-secondary { background: #e2e8f0; color: #333; }
+        .btn-secondary:hover { background: #cbd5e0; }
+        .card { background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .messages { margin-bottom: 20px; }
+        .message-success { background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; padding: 12px 16px; border-radius: 6px; }
+        .message-error { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px 16px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>📱 SMS Campaign Manager</h1>
+        <div>
+            <a href="/">Dashboard</a>
+            <a href="/campaigns/new/">New Campaign</a>
+        </div>
+    </nav>
+    <div class="container">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
