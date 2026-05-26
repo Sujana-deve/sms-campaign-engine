@@ -1,9 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from .models import Campaign, Contact
+from .models import Campaign, CampaignLog, Contact
 import sys
 import os
-import uuid
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -12,24 +11,27 @@ from runner.campaign_runner import run_campaign
 
 def dashboard(request):
     campaigns = Campaign.objects.all()
+    logs = {log.campaign_id: log for log in CampaignLog.objects.order_by('-completed_at')}
+    for campaign in campaigns:
+        campaign.log = logs.get(campaign.id)
     return render(request, 'campaigns/dashboard.html', {'campaigns': campaigns})
 
 
 def new_campaign(request):
     cities = Contact.objects.values_list('city', flat=True).distinct().exclude(city=None)
-    business_types = Contact.objects.values_list('business_type', flat=True).distinct().exclude(business_type=None)
+    categories = Contact.objects.values_list('category', flat=True).distinct().exclude(category=None)
 
     if request.method == 'POST':
         name = request.POST.get('name')
         template = request.POST.get('template')
         city = request.POST.get('city', '')
-        business_type = request.POST.get('business_type', '')
+        category = request.POST.get('category', '')
 
         filters = {}
         if city:
             filters['city'] = city
-        if business_type:
-            filters['business_type'] = business_type
+        if category:
+            filters['category'] = category
 
         campaign = Campaign.objects.create(
             name=name,
@@ -47,10 +49,17 @@ def new_campaign(request):
 
     return render(request, 'campaigns/new_campaign.html', {
         'cities': cities,
-        'business_types': business_types,
+        'categories': categories,
     })
 
 
 def campaign_detail(request, campaign_id):
     campaign = get_object_or_404(Campaign, id=campaign_id)
-    return render(request, 'campaigns/campaign_detail.html', {'campaign': campaign})
+    try:
+        log = CampaignLog.objects.filter(campaign=campaign).order_by('-completed_at').first()
+    except CampaignLog.DoesNotExist:
+        log = None
+    return render(request, 'campaigns/campaign_detail.html', {
+        'campaign': campaign,
+        'log': log,
+    })

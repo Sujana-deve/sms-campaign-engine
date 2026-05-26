@@ -1,54 +1,71 @@
 {% extends 'campaigns/base.html' %}
 
-{% block title %}New Campaign — SMS Campaign Manager{% endblock %}
+{% block title %}{{ campaign.name }} — SMS Campaign Manager{% endblock %}
 
 {% block content %}
-<div style="max-width:640px;">
-    <h2 style="font-size:24px; font-weight:600; margin-bottom:24px;">New Campaign</h2>
-
-    <div class="card">
-        <form method="post">
-            {% csrf_token %}
-
-            <div style="margin-bottom:20px;">
-                <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Campaign Name</label>
-                <input type="text" name="name" required placeholder="e.g. Kathmandu Restaurants May 2026"
-                    style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
-            </div>
-
-            <div style="margin-bottom:20px;">
-                <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Message Template</label>
-                <textarea name="template" required rows="4" placeholder="Hello {owner_name}, this is a special offer for {business_name} in {city}!"
-                    style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; resize:vertical;"></textarea>
-                <p style="font-size:12px; color:#718096; margin-top:4px;">Use {owner_name}, {business_name}, {city} for personalization. Keep under 160 characters.</p>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
-                <div>
-                    <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Filter by City <span style="color:#718096;">(optional)</span></label>
-                    <select name="city" style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
-                        <option value="">All Cities</option>
-                        {% for city in cities %}
-                        <option value="{{ city }}">{{ city }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Filter by Business Type <span style="color:#718096;">(optional)</span></label>
-                    <select name="business_type" style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
-                        <option value="">All Types</option>
-                        {% for bt in business_types %}
-                        <option value="{{ bt }}">{{ bt }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-
-            <div style="display:flex; gap:12px;">
-                <button type="submit" class="btn btn-primary">🚀 Launch Campaign</button>
-                <a href="/" class="btn btn-secondary">Cancel</a>
-            </div>
-        </form>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <div>
+        <a href="/" style="color:#718096; font-size:14px; text-decoration:none;">← Back to Dashboard</a>
+        <h2 style="font-size:24px; font-weight:600; margin-top:6px;">{{ campaign.name }}</h2>
+        <p style="color:#718096; font-size:14px;">{{ campaign.created_at|date:"F d, Y — g:i A" }}</p>
     </div>
+</div>
+
+{% if log %}
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
+    <div class="card" style="text-align:center;">
+        <p style="font-size:32px; font-weight:700;">{{ log.sent }}</p>
+        <p style="color:#718096; font-size:13px; margin-top:4px;">Sent</p>
+    </div>
+    <div class="card" style="text-align:center;">
+        <p style="font-size:32px; font-weight:700; color:#065f46;">{{ log.delivered }}</p>
+        <p style="color:#718096; font-size:13px; margin-top:4px;">Delivered</p>
+    </div>
+    <div class="card" style="text-align:center;">
+        <p style="font-size:32px; font-weight:700;">{{ log.delivery_rate }}%</p>
+        <p style="color:#718096; font-size:13px; margin-top:4px;">Delivery Rate</p>
+    </div>
+    <div class="card" style="text-align:center;">
+        <p style="font-size:32px; font-weight:700;">Rs. {{ log.cost_npr }}</p>
+        <p style="color:#718096; font-size:13px; margin-top:4px;">Total Cost</p>
+    </div>
+</div>
+{% else %}
+<div class="card" style="color:#718096; padding:24px;">
+    No campaign log found for this campaign.
+</div>
+{% endif %}
+
+<div class="card">
+    <p style="font-size:13px; color:#718096; margin-bottom:4px;">Message Template</p>
+    <p style="font-size:15px; background:#f7fafc; padding:12px 16px; border-radius:6px; border-left:3px solid #4f46e5;">{{ campaign.template }}</p>
+</div>
+
+<div class="card" style="margin-top:20px;">
+    <p style="font-size:13px; color:#718096; margin-bottom:12px;">Campaign Details</p>
+    <table style="width:100%; border-collapse:collapse;">
+        <tr style="border-bottom:1px solid #f0f0f0;">
+            <td style="padding:10px 0; color:#718096; font-size:14px; width:200px;">Status</td>
+            <td style="padding:10px 0; font-size:14px;">{{ campaign.status }}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f0f0f0;">
+            <td style="padding:10px 0; color:#718096; font-size:14px;">Type</td>
+            <td style="padding:10px 0; font-size:14px;">{{ campaign.trigger_type }}</td>
+        </tr>
+        {% if log %}
+        <tr style="border-bottom:1px solid #f0f0f0;">
+            <td style="padding:10px 0; color:#718096; font-size:14px;">Total Contacts</td>
+            <td style="padding:10px 0; font-size:14px;">{{ log.total_contacts }}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f0f0f0;">
+            <td style="padding:10px 0; color:#718096; font-size:14px;">Opted Out Skipped</td>
+            <td style="padding:10px 0; font-size:14px;">{{ log.opted_out_skipped }}</td>
+        </tr>
+        <tr>
+            <td style="padding:10px 0; color:#718096; font-size:14px;">Completed At</td>
+            <td style="padding:10px 0; font-size:14px;">{{ log.completed_at|date:"F d, Y — g:i A" }}</td>
+        </tr>
+        {% endif %}
+    </table>
 </div>
 {% endblock %}

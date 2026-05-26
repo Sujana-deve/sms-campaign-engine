@@ -18,7 +18,7 @@
                 <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Sent</th>
                 <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Delivered</th>
                 <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Delivery Rate</th>
-                <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Cost</th>
+                <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Cost (NPR)</th>
                 <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;"></th>
             </tr>
         </thead>
@@ -27,14 +27,22 @@
             <tr style="border-bottom:1px solid #f7fafc;">
                 <td style="padding:14px 20px; font-weight:500;">{{ campaign.name }}</td>
                 <td style="padding:14px 20px; color:#718096; font-size:14px;">{{ campaign.created_at|date:"M d, Y" }}</td>
-                <td style="padding:14px 20px;">{{ campaign.total_sent }}</td>
-                <td style="padding:14px 20px;">{{ campaign.total_delivered }}</td>
                 <td style="padding:14px 20px;">
-                    <span style="background:{% if campaign.delivery_rate >= 90 %}#d1fae5; color:#065f46{% elif campaign.delivery_rate >= 70 %}#fef3c7; color:#92400e{% else %}#fee2e2; color:#991b1b{% endif %}; padding:4px 10px; border-radius:20px; font-size:13px; font-weight:500;">
-                        {{ campaign.delivery_rate }}%
-                    </span>
+                    {% if campaign.log %}{{ campaign.log.sent }}{% else %}—{% endif %}
                 </td>
-                <td style="padding:14px 20px;">Rs. {{ campaign.total_cost }}</td>
+                <td style="padding:14px 20px;">
+                    {% if campaign.log %}{{ campaign.log.delivered }}{% else %}—{% endif %}
+                </td>
+                <td style="padding:14px 20px;">
+                    {% if campaign.log %}
+                    <span style="background:{% if campaign.log.delivery_rate >= 90 %}#d1fae5; color:#065f46{% elif campaign.log.delivery_rate >= 70 %}#fef3c7; color:#92400e{% else %}#fee2e2; color:#991b1b{% endif %}; padding:4px 10px; border-radius:20px; font-size:13px; font-weight:500;">
+                        {{ campaign.log.delivery_rate }}%
+                    </span>
+                    {% else %}—{% endif %}
+                </td>
+                <td style="padding:14px 20px;">
+                    {% if campaign.log %}Rs. {{ campaign.log.cost_npr }}{% else %}—{% endif %}
+                </td>
                 <td style="padding:14px 20px;"><a href="/campaigns/{{ campaign.id }}/" style="color:#4f46e5; font-size:14px;">View Report →</a></td>
             </tr>
             {% endfor %}
