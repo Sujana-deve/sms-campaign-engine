@@ -3,10 +3,29 @@
 {% block title %}Dashboard — SMS Campaign Manager{% endblock %}
 
 {% block content %}
+
+{% if has_running_campaigns %}
+<meta http-equiv="refresh" content="5">
+{% endif %}
+
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
     <h2 style="font-size:24px; font-weight:600;">Campaigns</h2>
     <a href="/campaigns/new/" class="btn btn-primary">+ New Campaign</a>
 </div>
+
+{% if has_running_campaigns %}
+<div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:14px; color:#92400e;">
+    ⏳ A campaign is currently running. This page will refresh automatically.
+</div>
+{% endif %}
+
+{% if messages %}
+{% for message in messages %}
+<div style="background:{% if message.tags == 'success' %}#d1fae5; color:#065f46; border:1px solid #6ee7b7;{% else %}#fee2e2; color:#991b1b; border:1px solid #fca5a5;{% endif %} border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:14px;">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
 
 {% if campaigns %}
 <div class="card" style="padding:0;">
@@ -14,6 +33,7 @@
         <thead>
             <tr style="border-bottom:1px solid #e2e8f0;">
                 <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Campaign Name</th>
+                <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Status</th>
                 <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Date</th>
                 <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Sent</th>
                 <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Delivered</th>
@@ -26,6 +46,17 @@
             {% for campaign in campaigns %}
             <tr style="border-bottom:1px solid #f7fafc;">
                 <td style="padding:14px 20px; font-weight:500;">{{ campaign.name }}</td>
+                <td style="padding:14px 20px;">
+                    {% if campaign.status == 'running' %}
+                    <span style="background:#dbeafe; color:#1e40af; padding:4px 10px; border-radius:20px; font-size:13px; font-weight:500;">⏳ Running</span>
+                    {% elif campaign.status == 'completed' %}
+                    <span style="background:#d1fae5; color:#065f46; padding:4px 10px; border-radius:20px; font-size:13px; font-weight:500;">✓ Completed</span>
+                    {% elif campaign.status == 'failed' %}
+                    <span style="background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:20px; font-size:13px; font-weight:500;">✗ Failed</span>
+                    {% else %}
+                    <span style="background:#f1f5f9; color:#64748b; padding:4px 10px; border-radius:20px; font-size:13px; font-weight:500;">Draft</span>
+                    {% endif %}
+                </td>
                 <td style="padding:14px 20px; color:#718096; font-size:14px;">{{ campaign.created_at|date:"M d, Y" }}</td>
                 <td style="padding:14px 20px;">
                     {% if campaign.log %}{{ campaign.log.sent }}{% else %}—{% endif %}
@@ -43,7 +74,9 @@
                 <td style="padding:14px 20px;">
                     {% if campaign.log %}Rs. {{ campaign.log.cost_npr }}{% else %}—{% endif %}
                 </td>
-                <td style="padding:14px 20px;"><a href="/campaigns/{{ campaign.id }}/" style="color:#4f46e5; font-size:14px;">View Report →</a></td>
+                <td style="padding:14px 20px;">
+                    <a href="/campaigns/{{ campaign.id }}/" style="color:#4f46e5; font-size:14px;">View Report →</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -55,4 +88,5 @@
     <a href="/campaigns/new/" class="btn btn-primary">Launch Your First Campaign</a>
 </div>
 {% endif %}
+
 {% endblock %}

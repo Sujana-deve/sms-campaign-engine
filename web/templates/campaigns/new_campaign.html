@@ -34,14 +34,14 @@
                     </select>
                 </div>
                 <div>
-                    <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Filter by Business Type <span style="color:#718096;">(optional)</span></label>
-                    <select name="business_type" style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
-                        <option value="">All Types</option>
-                        {% for bt in business_types %}
-                        <option value="{{ bt }}">{{ bt }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+    <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Filter by Category <span style="color:#718096;">(optional)</span></label>
+    <select name="category" style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+        <option value="">All Categories</option>
+        {% for category in categories %}
+        <option value="{{ category }}">{{ category }}</option>
+        {% endfor %}
+    </select>
+</div>
             </div>
 
             <div style="display:flex; gap:12px;">
