@@ -1,0 +1,34 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}Import Contacts — SMS Campaign Manager{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;">
+    <h2 style="font-size:24px; font-weight:600; margin-bottom:24px;">Import Contacts</h2>
+
+
+    <div class="card" style="margin-bottom:24px;">
+        <h3 style="font-size:16px; font-weight:600; margin-bottom:8px;">Step 1 — Download Template</h3>
+        <p style="font-size:14px; color:#718096; margin-bottom:16px;">
+            Download the Excel template, fill in your contacts, and upload it below.
+            Do not change the column headers.
+        </p>
+        <a href="{% url 'download_template' %}" class="btn btn-secondary">⬇ Download Template</a>
+    </div>
+
+    <div class="card">
+        <h3 style="font-size:16px; font-weight:600; margin-bottom:8px;">Step 2 — Upload Filled Template</h3>
+        <p style="font-size:14px; color:#718096; margin-bottom:16px;">
+            Only <strong>.xlsx</strong> files accepted. Required columns: Business Name, Phone.
+        </p>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div style="margin-bottom:20px;">
+                <input type="file" name="file" accept=".xlsx" required
+                    style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+            </div>
+            <button type="submit" class="btn btn-primary">⬆ Upload Contacts</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
