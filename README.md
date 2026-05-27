@@ -1,39 +1,37 @@
 # Bulk SMS Campaign Engine
 
-A production-grade bulk SMS automation system built with Python and PostgreSQL. Handles contact management, message personalization, opt-out filtering, rate-limited delivery via Sparrow SMS, and campaign reporting — end to end.
+A production-grade bulk SMS automation system built with Python, PostgreSQL, and Django. Handles contact management, message personalization, opt-out filtering, rate-limited delivery via Sparrow SMS, campaign reporting, and a web UI for non-technical users — end to end.
 
 ---
 
 ## What It Does
 
-Takes a list of contacts from a database, personalizes a message for each one, filters out opted-out numbers, sends via Sparrow SMS at a controlled rate, tracks delivery, logs cost, and generates an HTML report — all from a single command.
-
-The pipeline replaces manual CSV uploads to SMS dashboards with DB-native automation, ICP filtering, and full audit trails.
+Takes a list of contacts from a database, personalizes a message for each one, filters out opted-out numbers, sends via Sparrow SMS at a controlled rate, tracks delivery, logs cost, and generates an HTML report. A Django web UI allows marketing teams to launch and monitor campaigns without touching code.
 
 ---
 
 ## Pipeline Flow
-
-```
 Contacts DB → Fetch → Normalize & Validate → Opt-out Filter →
 Personalize Messages → Queue → Rate Limit (5 SMS/sec) →
 Send with Retry (3 attempts) → Track Delivery → Log Campaign → HTML Report
-```
 
 ---
 
 ## Features
 
-- **Contact validation** — phone normalization for all Nepali number formats, missing field detection, deduplication
-- **Opt-out filtering** — automatically skips numbers that have opted out, no manual management needed
-- **Message personalization** — supports `{owner_name}`, `{business_name}`, `{city}` and other contact field variables
-- **ICP filtering** — fetch contacts by business type, city, or any DB filter
+- **Contact validation** — phone normalization for all Nepali NTC/Ncell formats, missing field detection, deduplication
+- **Opt-out filtering** — automatically skips opted-out numbers
+- **Message personalization** — supports `{owner_name}`, `{business_name}`, `{city}`
+- **Segment filtering** — target contacts by city, category, or any DB filter
 - **Rate limiting** — enforces 5 SMS/sec to stay within gateway limits
 - **Retry logic** — 3 attempts before marking a send as failed
-- **Delivery tracking** — records `delivered_at` or `failed_at` per message in the DB
-- **Campaign logging** — tracks total cost, sent count, failed count per campaign
-- **HTML report** — auto-generated per campaign with delivery rate, cost, and per-contact status
-- **Gateway abstraction** — swap between simulate (testing) and Sparrow (production) with one line
+- **Campaign status tracking** — status moves through `draft → running → completed/failed`
+- **Delivery tracking** — records `delivered_at` or `failed_at` per message
+- **Campaign logging** — tracks total cost, sent, delivered, failed per campaign
+- **HTML report** — auto-generated per campaign with delivery rate, cost, per-contact status
+- **Gateway abstraction** — swap simulate and Sparrow with one line
+- **Django web UI** — dashboard, campaign launch form, campaign detail view
+- **Background execution** — campaigns run in a background thread, UI never blocks
 
 ---
 
@@ -44,6 +42,7 @@ Send with Retry (3 attempts) → Track Delivery → Log Campaign → HTML Report
 | Language | Python 3.13 |
 | Database | PostgreSQL 17 |
 | DB Driver | psycopg2 |
+| Web Framework | Django 6.0 |
 | SMS Gateway | Sparrow SMS (Nepal) |
 | HTTP Client | requests |
 | Config | python-dotenv |
@@ -51,20 +50,18 @@ Send with Retry (3 attempts) → Track Delivery → Log Campaign → HTML Report
 ---
 
 ## Project Structure
-
-```
 sms_automation/
 │
 ├── config/
-│   └── settings.py          # Loads env vars, DB config, rate limit, SMS cost
+│   └── settings.py          # Env vars, DB config, rate limit, SMS cost
 │
 ├── db/
 │   ├── connection.py         # PostgreSQL connection
-│   └── queries.py            # Fetch contacts, fetch opt-outs, save messages
+│   └── queries.py            # Fetch contacts, opt-outs, save messages
 │
 ├── engine/
 │   ├── contact_fetcher.py    # Fetches contacts with optional filters
-│   ├── validator.py          # Phone normalization, missing fields, deduplication
+│   ├── validator.py          # Phone normalization, deduplication
 │   ├── opt_out_checker.py    # Filters opted-out numbers
 │   └── message_generator.py  # Personalizes messages, warns if over 160 chars
 │
@@ -73,9 +70,9 @@ sms_automation/
 │   └── rate_limiter.py       # Enforces 5 SMS/sec
 │
 ├── gateway/
-│   ├── base_gateway.py       # Abstract base class for SMS gateways
+│   ├── base_gateway.py       # Abstract base class
 │   ├── simulate_gateway.py   # Hardcoded delivery for testing
-│   └── sparrow_gateway.py    # Sparrow SMS API with error handling and timeout
+│   └── sparrow_gateway.py    # Sparrow SMS API, error handling, timeout
 │
 ├── tracker/
 │   ├── delivery_tracker.py   # Sets delivered_at or failed_at in DB
@@ -85,13 +82,21 @@ sms_automation/
 │   └── report.py             # Generates HTML report per campaign
 │
 ├── runner/
-│   └── campaign_runner.py    # Full pipeline orchestration
+│   └── campaign_runner.py    # Full pipeline orchestration with retry
 │
-├── tests/                    # Test files
+├── web/                      # Django web UI
+│   ├── manage.py
+│   ├── sms_web/              # Django project settings
+│   └── campaigns/            # Django app
+│       ├── models.py         # Campaign, CampaignLog, Contact models
+│       ├── views.py          # dashboard, new_campaign, campaign_detail
+│       ├── urls.py           # URL routing
+│       └── templates/        # base, dashboard, new_campaign, campaign_detail
+│
+├── tests/
 ├── reports/                  # Generated HTML reports (gitignored)
-├── .env.example              # Environment variable template
-└── main.py                   # Entry point
-```
+├── .env.example
+└── requirements.txt
 
 ---
 
@@ -124,8 +129,6 @@ pip install -r requirements.txt
 
 ### 4. Configure environment variables
 
-Copy `.env.example` to `.env` and fill in your values:
-
 ```bash
 cp .env.example .env
 ```
@@ -146,30 +149,45 @@ RATE_LIMIT_PER_SECOND=5
 
 ### 5. Set up the database
 
-Run your PostgreSQL schema to create the required tables: `contacts`, `opt_outs`, `messages`, `campaigns`.
+Run your PostgreSQL schema to create: `contacts`, `opt_outs`, `messages`, `campaigns`, `campaign_logs`.
 
-### 6. Run
+### 6. Run pipeline directly
 
 ```bash
 python main.py
 ```
 
-Reports are saved to `reports/` as HTML files.
+### 7. Run Django web UI
+
+```bash
+cd web
+python manage.py runserver
+```
+
+Visit `http://127.0.0.1:8000`
+
+---
+
+## Django Web UI
+
+| Page | URL | Description |
+|---|---|---|
+| Dashboard | `/` | All campaigns with status, stats, cost |
+| New Campaign | `/campaigns/new/` | Launch campaign with segment filters |
+| Campaign Detail | `/campaigns/<id>/` | Stats and template for one campaign |
+
+Campaign status updates automatically. Dashboard refreshes every 5 seconds while a campaign is running.
 
 ---
 
 ## Gateway: Simulate vs Sparrow
 
-For testing, the system uses `simulate_gateway.py` which marks all sends as delivered without hitting any API.
-
-To switch to real Sparrow sends, change one line in `campaign_runner.py`:
-
 ```python
-# Testing
-from gateway.simulate_gateway import SimulateGateway as Gateway
+# Testing (default)
+gateway = SimulateGateway()
 
-# Production
-from gateway.sparrow_gateway import SparrowGateway as Gateway
+# Production — change this one line in campaign_runner.py
+gateway = SparrowGateway()
 ```
 
 Sparrow SMS credentials require sender ID registration (7-10 business days in Nepal).
@@ -180,37 +198,31 @@ Sparrow SMS credentials require sender ID registration (7-10 business days in Ne
 
 | Limitation | Status |
 |---|---|
-| No inbound SMS / response tracking | v2 — requires Sparrow inbound SMS setup |
-| No follow-up sequencing | v2 — time-based drip sequences planned |
-| No web UI | v2 — Django admin portal planned for marketing team access |
-| No webhook triggers | v2 — event-based sends require webhook integration |
 | Sparrow untested with live credentials | Pending sender ID registration |
+| No CSV/Excel contact import | Planned next |
+| No follow-up sequencing | Planned |
+| No inbound SMS / response tracking | v2 |
+| No webhook triggers | v2 |
+| Threading used for background tasks | Replace with Celery pre-production |
 
 ---
 
 ## Roadmap
 
+- [ ] CSV/Excel contact import via Django UI
 - [ ] Follow-up sequencing (time-based drip campaigns)
-- [ ] Django admin UI for non-technical users
+- [ ] Celery + Redis for production task queue
 - [ ] Inbound SMS response tracking via Sparrow
-- [ ] Webhook-triggered sends (website visitors, form submissions)
-- [ ] Response-aware sequence enrollment
+- [ ] Webhook-triggered sends
+- [ ] Server deployment
 
 ---
 
 ## Requirements
-
-```
 psycopg2-binary
 python-dotenv
 requests
-```
-
-Generate with:
-
-```bash
-pip freeze > requirements.txt
-```
+django
 
 ---
 
