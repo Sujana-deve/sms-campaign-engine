@@ -1,0 +1,99 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}Contacts — SMS Campaign Manager{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h2 style="font-size:24px; font-weight:600;">Contacts <span style="font-size:16px; color:#718096; font-weight:400;">({{ total }})</span></h2>
+    <a href="{% url 'import_contacts' %}" class="btn btn-primary">+ Import Contacts</a>
+</div>
+
+<div class="card" style="margin-bottom:20px; padding:16px 24px;">
+    <form method="get" style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end;">
+        <div>
+            <label style="display:block; font-size:12px; color:#718096; margin-bottom:4px;">Search</label>
+            <input type="text" name="q" value="{{ query }}" placeholder="Name, phone..."
+                style="padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; width:200px;">
+        </div>
+        <div>
+            <label style="display:block; font-size:12px; color:#718096; margin-bottom:4px;">City</label>
+            <select name="city" style="padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+                <option value="">All Cities</option>
+                {% for c in cities %}
+                <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label style="display:block; font-size:12px; color:#718096; margin-bottom:4px;">Category</label>
+            <select name="category" style="padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label style="display:block; font-size:12px; color:#718096; margin-bottom:4px;">Status</label>
+            <select name="status" style="padding:8px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-secondary">Filter</button>
+        <a href="{% url 'contact_list' %}" class="btn btn-secondary">Reset</a>
+    </form>
+</div>
+
+{% if contacts %}
+<div class="card" style="padding:0;">
+    <table style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr style="border-bottom:1px solid #e2e8f0;">
+                <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Business</th>
+                <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Owner</th>
+                <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Phone</th>
+                <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">City</th>
+                <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Category</th>
+                <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Status</th>
+                <th style="padding:14px 20px; text-align:left; font-size:13px; color:#718096;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for contact in contacts %}
+            <tr style="border-bottom:1px solid #f7fafc;">
+                <td style="padding:14px 20px; font-weight:500;">{{ contact.business_name }}</td>
+                <td style="padding:14px 20px; color:#718096;">{{ contact.owner_name|default:"—" }}</td>
+                <td style="padding:14px 20px; font-size:14px;">{{ contact.phone }}</td>
+                <td style="padding:14px 20px; color:#718096;">{{ contact.city|default:"—" }}</td>
+                <td style="padding:14px 20px; color:#718096;">{{ contact.category|default:"—" }}</td>
+                <td style="padding:14px 20px;">
+                    {% if contact.is_active %}
+                    <span style="background:#d1fae5; color:#065f46; padding:4px 10px; border-radius:20px; font-size:13px; font-weight:500;">Active</span>
+                    {% else %}
+                    <span style="background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:20px; font-size:13px; font-weight:500;">Inactive</span>
+                    {% endif %}
+                </td>
+                <td style="padding:14px 20px; display:flex; gap:8px;">
+                    <a href="{% url 'edit_contact' contact.id %}" class="btn btn-secondary" style="padding:6px 12px; font-size:13px;">Edit</a>
+                    <form method="post" action="{% url 'toggle_contact' contact.id %}" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn" style="padding:6px 12px; font-size:13px;
+                            {% if contact.is_active %}background:#fee2e2; color:#991b1b;{% else %}background:#d1fae5; color:#065f46;{% endif %}">
+                            {% if contact.is_active %}Deactivate{% else %}Activate{% endif %}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card" style="text-align:center; padding:60px;">
+    <p style="color:#718096; font-size:16px; margin-bottom:20px;">No contacts found.</p>
+    <a href="{% url 'import_contacts' %}" class="btn btn-primary">Import Contacts</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'campaigns/base.html' %}
+
+{% block title %}Edit Contact — SMS Campaign Manager{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;">
+    <h2 style="font-size:24px; font-weight:600; margin-bottom:24px;">Edit Contact</h2>
+
+    <div class="card">
+        <form method="post">
+            {% csrf_token %}
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Business Name <span style="color:#e53e3e;">*</span></label>
+                <input type="text" name="business_name" value="{{ contact.business_name }}" required
+                    style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Owner Name</label>
+                <input type="text" name="owner_name" value="{{ contact.owner_name|default:'' }}"
+                    style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Phone <span style="color:#e53e3e;">*</span></label>
+                <input type="text" name="phone" value="{{ contact.phone }}" required
+                    style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+                <div>
+                    <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">City</label>
+                    <input type="text" name="city" value="{{ contact.city|default:'' }}"
+                        style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+                </div>
+                <div>
+                    <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Category</label>
+                    <input type="text" name="category" value="{{ contact.category|default:'' }}"
+                        style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+                </div>
+            </div>
+            <div style="margin-bottom:24px;">
+                <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Email</label>
+                <input type="email" name="email" value="{{ contact.email|default:'' }}"
+                    style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+            </div>
+            <div style="display:flex; gap:12px;">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{% url 'contact_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

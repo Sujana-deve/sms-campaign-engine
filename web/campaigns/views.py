@@ -244,3 +244,86 @@ def import_contacts(request):
             return render(request, 'campaigns/import_contacts.html')
 
     return render(request, 'campaigns/import_contacts.html')
+
+
+def contact_list(request):
+    query = request.GET.get('q', '').strip()
+    city = request.GET.get('city', '').strip()
+    category = request.GET.get('category', '').strip()
+    status = request.GET.get('status', 'active').strip()
+
+    contacts = Contact.objects.all()
+
+    if query:
+        from django.db.models import Q
+        contacts = contacts.filter(
+            Q(business_name__icontains=query) |
+            Q(owner_name__icontains=query) |
+            Q(phone__icontains=query)
+        )
+    if city:
+        contacts = contacts.filter(city=city)
+    if category:
+        contacts = contacts.filter(category=category)
+    if status == 'active':
+        contacts = contacts.filter(is_active=True)
+    elif status == 'inactive':
+        contacts = contacts.filter(is_active=False)
+
+    cities = Contact.objects.values_list('city', flat=True).distinct().exclude(city=None).order_by('city')
+    categories = Contact.objects.values_list('category', flat=True).distinct().exclude(category=None).order_by('category')
+
+    return render(request, 'campaigns/contact_list.html', {
+        'contacts': contacts,
+        'cities': cities,
+        'categories': categories,
+        'query': query,
+        'selected_city': city,
+        'selected_category': category,
+        'selected_status': status,
+        'total': contacts.count(),
+    })
+
+
+def toggle_contact(request, contact_id):
+    if request.method == 'POST':
+        contact = get_object_or_404(Contact, id=contact_id)
+        contact.is_active = not contact.is_active
+        contact.save()
+        status = 'activated' if contact.is_active else 'deactivated'
+        django_messages.success(request, f'{contact.business_name} {status} successfully.')
+    return redirect('contact_list')
+
+
+def edit_contact(request, contact_id):
+    contact = get_object_or_404(Contact, id=contact_id)
+
+    if request.method == 'POST':
+        business_name = request.POST.get('business_name', '').strip()
+        owner_name = request.POST.get('owner_name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        city = request.POST.get('city', '').strip()
+        category = request.POST.get('category', '').strip()
+        email = request.POST.get('email', '').strip()
+
+        if not business_name or not phone:
+            django_messages.error(request, 'Business name and phone are required.')
+            return render(request, 'campaigns/edit_contact.html', {'contact': contact})
+
+        # Check phone uniqueness — exclude current contact
+        if Contact.objects.filter(phone=phone).exclude(id=contact_id).exists():
+            django_messages.error(request, f'{phone} is already assigned to another contact.')
+            return render(request, 'campaigns/edit_contact.html', {'contact': contact})
+
+        contact.business_name = business_name
+        contact.owner_name = owner_name if owner_name else None
+        contact.phone = phone
+        contact.city = city.title() if city else None
+        contact.category = category if category else None
+        contact.email = email if email else None
+        contact.save()
+
+        django_messages.success(request, f'{contact.business_name} updated successfully.')
+        return redirect('contact_list')
+
+    return render(request, 'campaigns/edit_contact.html', {'contact': contact})
