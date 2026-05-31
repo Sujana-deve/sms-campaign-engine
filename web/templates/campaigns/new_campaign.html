@@ -18,9 +18,34 @@
 
             <div style="margin-bottom:20px;">
                 <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Message Template</label>
-                <textarea name="template" required rows="4" placeholder="Hello {owner_name}, this is a special offer for {business_name} in {city}!"
-                    style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; resize:vertical;"></textarea>
-                <p style="font-size:12px; color:#718096; margin-top:4px;">Use {owner_name}, {business_name}, {city} for personalization. Keep under 160 characters.</p>
+
+                <!-- Insert Field Buttons -->
+                <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+                    <span style="font-size:12px; color:#718096; align-self:center;">Insert field:</span>
+                    <button type="button" onclick="insertField('{owner_name}')"
+                        style="padding:4px 10px; font-size:12px; border:1px solid #cbd5e0; border-radius:4px; background:#f7fafc; cursor:pointer;">
+                        Owner Name
+                    </button>
+                    <button type="button" onclick="insertField('{business_name}')"
+                        style="padding:4px 10px; font-size:12px; border:1px solid #cbd5e0; border-radius:4px; background:#f7fafc; cursor:pointer;">
+                        Business Name
+                    </button>
+                    <button type="button" onclick="insertField('{city}')"
+                        style="padding:4px 10px; font-size:12px; border:1px solid #cbd5e0; border-radius:4px; background:#f7fafc; cursor:pointer;">
+                        City
+                    </button>
+                </div>
+
+                <textarea id="messageTemplate" name="template" required rows="4"
+                    placeholder="e.g. Hello {owner_name}, we have a special offer for {business_name} in {city}. Contact us today!"
+                    style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; resize:vertical;"
+                    oninput="updateCounter()"></textarea>
+
+                <!-- Character Counter -->
+                <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                    <p style="font-size:12px; color:#718096; margin:0;">Click a field button above to insert it at cursor position.</p>
+                    <p id="charCounter" style="font-size:12px; color:#718096; margin:0;">0 / 160</p>
+                </div>
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -34,14 +59,14 @@
                     </select>
                 </div>
                 <div>
-    <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Filter by Category <span style="color:#718096;">(optional)</span></label>
-    <select name="category" style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
-        <option value="">All Categories</option>
-        {% for category in categories %}
-        <option value="{{ category }}">{{ category }}</option>
-        {% endfor %}
-    </select>
-</div>
+                    <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Filter by Category <span style="color:#718096;">(optional)</span></label>
+                    <select name="category" style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}">{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 
             <div style="display:flex; gap:12px;">
@@ -51,4 +76,39 @@
         </form>
     </div>
 </div>
+
+<script>
+    function insertField(field) {
+        const textarea = document.getElementById('messageTemplate');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+
+        // Insert at cursor position
+        textarea.value = text.substring(0, start) + field + text.substring(end);
+
+        // Move cursor to after inserted field
+        textarea.selectionStart = start + field.length;
+        textarea.selectionEnd = start + field.length;
+        textarea.focus();
+
+        updateCounter();
+    }
+
+    function updateCounter() {
+        const textarea = document.getElementById('messageTemplate');
+        const len = textarea.value.length;
+        const counter = document.getElementById('charCounter');
+        counter.textContent = len + ' / 160';
+
+        if (len > 160) {
+            counter.style.color = '#e53e3e'; // red over limit
+        } else if (len > 140) {
+            counter.style.color = '#dd6b20'; // orange approaching limit
+        } else {
+            counter.style.color = '#718096'; // default grey
+        }
+    }
+</script>
+
 {% endblock %}

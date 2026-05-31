@@ -12,7 +12,7 @@ class SparrowGateway:
         payload = {
             "token": SPARROW_TOKEN,
             "from": SPARROW_SENDER_ID,
-            "to": phone,
+            "to": phone.replace('+977', '', 1),  # FIX 1: Sparrow expects 977XXXXXXXXXX not +977XXXXXXXXXX
             "text": message,
         }
 
@@ -21,7 +21,7 @@ class SparrowGateway:
             result = response.json()
 
             if response.status_code == 200 and result.get("response_code") == 200:
-                status = "delivered"
+                status = "queued"  # FIX 2: Sparrow queues on acceptance, not actual delivery
             else:
                 # Use Sparrow's own error message for easier debugging
                 error_msg = result.get("response", "Unknown error")
