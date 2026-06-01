@@ -3,7 +3,7 @@ import re
 # Matches a valid normalized Nepali number: +9779[78]XXXXXXXX
 valid_phone_pattern = re.compile(r'^\+977[9][78]\d{8}$')
 
-REQUIRED_FIELDS = ['phone', 'business_name']
+REQUIRED_FIELDS = ['phone', 'business_name', 'owner_name', 'city']
 
 
 def normalize_phone(phone):
