@@ -3,67 +3,67 @@
 {% block title %}{{ campaign.name }} — SMS Campaign Manager{% endblock %}
 
 {% block content %}
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+<div class="page-header">
     <div>
-        <a href="/" style="color:#718096; font-size:14px; text-decoration:none;">← Back to Dashboard</a>
-        <h2 style="font-size:24px; font-weight:600; margin-top:6px;">{{ campaign.name }}</h2>
-        <p style="color:#718096; font-size:14px;">{{ campaign.created_at|date:"F d, Y — g:i A" }}</p>
+        <a href="/" class="back-link">← Back to Dashboard</a>
+        <h2 class="page-title" style="margin-top:6px;">{{ campaign.name }}</h2>
+        <p class="subtitle">{{ campaign.created_at|date:"F d, Y — g:i A" }}</p>
     </div>
 </div>
 
 {% if log %}
-<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px;">
-    <div class="card" style="text-align:center;">
-        <p style="font-size:32px; font-weight:700;">{{ log.sent }}</p>
-        <p style="color:#718096; font-size:13px; margin-top:4px;">Sent</p>
+<div class="stat-grid">
+    <div class="stat-card">
+        <p class="stat-value">{{ log.sent }}</p>
+        <p class="stat-label">Sent</p>
     </div>
-    <div class="card" style="text-align:center;">
-        <p style="font-size:32px; font-weight:700; color:#065f46;">{{ log.delivered }}</p>
-        <p style="color:#718096; font-size:13px; margin-top:4px;">Delivered</p>
+    <div class="stat-card">
+        <p class="stat-value" style="color:var(--success-fg);">{{ log.delivered }}</p>
+        <p class="stat-label">Delivered</p>
     </div>
-    <div class="card" style="text-align:center;">
-        <p style="font-size:32px; font-weight:700;">{{ log.delivery_rate }}%</p>
-        <p style="color:#718096; font-size:13px; margin-top:4px;">Delivery Rate</p>
+    <div class="stat-card">
+        <p class="stat-value">{{ log.delivery_rate }}%</p>
+        <p class="stat-label">Delivery Rate</p>
     </div>
-    <div class="card" style="text-align:center;">
-        <p style="font-size:32px; font-weight:700;">Rs. {{ log.cost_npr }}</p>
-        <p style="color:#718096; font-size:13px; margin-top:4px;">Total Cost</p>
+    <div class="stat-card">
+        <p class="stat-value">Rs. {{ log.cost_npr }}</p>
+        <p class="stat-label">Total Cost</p>
     </div>
 </div>
 {% else %}
-<div class="card" style="color:#718096; padding:24px;">
+<div class="card" style="color:var(--muted);">
     No campaign log found for this campaign.
 </div>
 {% endif %}
 
 <div class="card">
-    <p style="font-size:13px; color:#718096; margin-bottom:4px;">Message Template</p>
-    <p style="font-size:15px; background:#f7fafc; padding:12px 16px; border-radius:6px; border-left:3px solid #4f46e5;">{{ campaign.template }}</p>
+    <p class="form-hint" style="margin-bottom:6px;">Message Template</p>
+    <p style="font-size:15px; background:#f7f8fc; padding:14px 16px; border-radius:10px; border-left:3px solid var(--primary);">{{ campaign.template }}</p>
 </div>
 
-<div class="card" style="margin-top:20px;">
-    <p style="font-size:13px; color:#718096; margin-bottom:12px;">Campaign Details</p>
-    <table style="width:100%; border-collapse:collapse;">
-        <tr style="border-bottom:1px solid #f0f0f0;">
-            <td style="padding:10px 0; color:#718096; font-size:14px; width:200px;">Status</td>
-            <td style="padding:10px 0; font-size:14px;">{{ campaign.status }}</td>
-        </tr>
-        <tr style="border-bottom:1px solid #f0f0f0;">
-            <td style="padding:10px 0; color:#718096; font-size:14px;">Type</td>
-            <td style="padding:10px 0; font-size:14px;">{{ campaign.trigger_type }}</td>
-        </tr>
-        {% if log %}
-        <tr style="border-bottom:1px solid #f0f0f0;">
-            <td style="padding:10px 0; color:#718096; font-size:14px;">Total Contacts</td>
-            <td style="padding:10px 0; font-size:14px;">{{ log.total_contacts }}</td>
-        </tr>
-        <tr style="border-bottom:1px solid #f0f0f0;">
-            <td style="padding:10px 0; color:#718096; font-size:14px;">Opted Out Skipped</td>
-            <td style="padding:10px 0; font-size:14px;">{{ log.opted_out_skipped }}</td>
+<div class="card">
+    <p class="form-hint" style="margin-bottom:8px;">Campaign Details</p>
+    <table class="detail-table">
+        <tr>
+            <td>Status</td>
+            <td>{{ campaign.status }}</td>
         </tr>
         <tr>
-            <td style="padding:10px 0; color:#718096; font-size:14px;">Completed At</td>
-            <td style="padding:10px 0; font-size:14px;">{{ log.completed_at|date:"F d, Y — g:i A" }}</td>
+            <td>Type</td>
+            <td>{{ campaign.trigger_type }}</td>
+        </tr>
+        {% if log %}
+        <tr>
+            <td>Total Contacts</td>
+            <td>{{ log.total_contacts }}</td>
+        </tr>
+        <tr>
+            <td>Opted Out Skipped</td>
+            <td>{{ log.opted_out_skipped }}</td>
+        </tr>
+        <tr>
+            <td>Completed At</td>
+            <td>{{ log.completed_at|date:"F d, Y — g:i A" }}</td>
         </tr>
         {% endif %}
     </table>

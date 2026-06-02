@@ -3,55 +3,46 @@
 {% block title %}New Campaign — SMS Campaign Manager{% endblock %}
 
 {% block content %}
-<div style="max-width:640px;">
-    <h2 style="font-size:24px; font-weight:600; margin-bottom:24px;">New Campaign</h2>
+<div class="form-narrow">
+    <div class="page-header">
+        <h2 class="page-title">New Campaign</h2>
+    </div>
 
     <div class="card">
         <form method="post">
             {% csrf_token %}
 
-            <div style="margin-bottom:20px;">
-                <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Campaign Name</label>
-                <input type="text" name="name" required placeholder="e.g. Kathmandu Restaurants May 2026"
-                    style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+            <div class="form-group">
+                <label class="form-label">Campaign Name</label>
+                <input type="text" name="name" required placeholder="e.g. Kathmandu Restaurants May 2026" class="form-input">
             </div>
 
-            <div style="margin-bottom:20px;">
-                <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Message Template</label>
+            <div class="form-group">
+                <label class="form-label">Message Template</label>
 
                 <!-- Insert Field Buttons -->
-                <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
-                    <span style="font-size:12px; color:#718096; align-self:center;">Insert field:</span>
-                    <button type="button" onclick="insertField('{owner_name}')"
-                        style="padding:4px 10px; font-size:12px; border:1px solid #cbd5e0; border-radius:4px; background:#f7fafc; cursor:pointer;">
-                        Owner Name
-                    </button>
-                    <button type="button" onclick="insertField('{business_name}')"
-                        style="padding:4px 10px; font-size:12px; border:1px solid #cbd5e0; border-radius:4px; background:#f7fafc; cursor:pointer;">
-                        Business Name
-                    </button>
-                    <button type="button" onclick="insertField('{city}')"
-                        style="padding:4px 10px; font-size:12px; border:1px solid #cbd5e0; border-radius:4px; background:#f7fafc; cursor:pointer;">
-                        City
-                    </button>
+                <div class="field-chips">
+                    <span class="form-hint">Insert field:</span>
+                    <button type="button" class="field-chip" onclick="insertField('{owner_name}')">Owner Name</button>
+                    <button type="button" class="field-chip" onclick="insertField('{business_name}')">Business Name</button>
+                    <button type="button" class="field-chip" onclick="insertField('{city}')">City</button>
                 </div>
 
-                <textarea id="messageTemplate" name="template" required rows="4"
+                <textarea id="messageTemplate" name="template" required rows="4" class="form-textarea"
                     placeholder="e.g. Hello {owner_name}, we have a special offer for {business_name} in {city}. Contact us today!"
-                    style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px; resize:vertical;"
                     oninput="updateCounter()"></textarea>
 
                 <!-- Character Counter -->
-                <div style="display:flex; justify-content:space-between; margin-top:4px;">
-                    <p style="font-size:12px; color:#718096; margin:0;">Click a field button above to insert it at cursor position.</p>
-                    <p id="charCounter" style="font-size:12px; color:#718096; margin:0;">0 / 160</p>
+                <div style="display:flex; justify-content:space-between; margin-top:6px;">
+                    <p class="form-hint">Click a field button above to insert it at cursor position.</p>
+                    <p id="charCounter" class="form-hint">0 / 160</p>
                 </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
+            <div class="form-row" style="margin-bottom:24px;">
                 <div>
-                    <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Filter by City <span style="color:#718096;">(optional)</span></label>
-                    <select name="city" style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+                    <label class="form-label">Filter by City <span class="optional">(optional)</span></label>
+                    <select name="city" class="form-select">
                         <option value="">All Cities</option>
                         {% for city in cities %}
                         <option value="{{ city }}">{{ city }}</option>
@@ -59,8 +50,8 @@
                     </select>
                 </div>
                 <div>
-                    <label style="display:block; font-size:14px; font-weight:500; margin-bottom:6px;">Filter by Category <span style="color:#718096;">(optional)</span></label>
-                    <select name="category" style="width:100%; padding:10px 14px; border:1px solid #e2e8f0; border-radius:6px; font-size:14px;">
+                    <label class="form-label">Filter by Category <span class="optional">(optional)</span></label>
+                    <select name="category" class="form-select">
                         <option value="">All Categories</option>
                         {% for category in categories %}
                         <option value="{{ category }}">{{ category }}</option>
@@ -69,7 +60,7 @@
                 </div>
             </div>
 
-            <div style="display:flex; gap:12px;">
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary">🚀 Launch Campaign</button>
                 <a href="/" class="btn btn-secondary">Cancel</a>
             </div>
@@ -102,11 +93,11 @@
         counter.textContent = len + ' / 160';
 
         if (len > 160) {
-            counter.style.color = '#e53e3e'; // red over limit
+            counter.style.color = '#c0362c'; // red over limit
         } else if (len > 140) {
-            counter.style.color = '#dd6b20'; // orange approaching limit
+            counter.style.color = '#b7791f'; // orange approaching limit
         } else {
-            counter.style.color = '#718096'; // default grey
+            counter.style.color = '#8a93a6'; // default grey
         }
     }
 </script>

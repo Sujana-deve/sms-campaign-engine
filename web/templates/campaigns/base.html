@@ -5,29 +5,188 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SMS Campaign Manager{% endblock %}</title>
     <style>
+        :root {
+            --bg: #f7f8fc;
+            --surface: #ffffff;
+            --border: #eaecf3;
+            --border-strong: #dde1ec;
+            --text: #1f2937;
+            --muted: #8a93a6;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-soft: #eef2ff;
+            --success-bg: #e9f9f1; --success-fg: #0d855a;
+            --warn-bg: #fff6e6;   --warn-fg: #b7791f;
+            --danger-bg: #fdecec; --danger-fg: #c0362c;
+            --info-bg: #e9f0ff;   --info-fg: #2d5fd0;
+            --radius: 14px;
+            --shadow: 0 1px 2px rgba(16,24,40,0.04), 0 4px 14px rgba(16,24,40,0.05);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; color: #333; }
-        nav { background: #1a1a2e; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
-        nav h1 { color: #fff; font-size: 20px; font-weight: 600; }
-        nav a { color: #a0aec0; text-decoration: none; font-size: 14px; margin-left: 24px; }
-        nav a:hover { color: #fff; }
-        .container { max-width: 1100px; margin: 40px auto; padding: 0 24px; }
-        .btn { display: inline-block; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; border: none; }
-        .btn-primary { background: #4f46e5; color: #fff; }
-        .btn-primary:hover { background: #4338ca; }
-        .btn-secondary { background: #e2e8f0; color: #333; }
-        .btn-secondary:hover { background: #cbd5e0; }
-        .card { background: #fff; border-radius: 10px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.5;
+        }
+
+        /* ---------- Nav ---------- */
+        nav {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        nav .brand {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        nav .links { display: flex; align-items: center; gap: 4px; }
+        nav a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 14px;
+            border-radius: 8px;
+            transition: background 0.15s, color 0.15s;
+        }
+        nav a:hover { color: var(--primary); background: var(--primary-soft); }
+
+        .container { max-width: 1100px; margin: 36px auto; padding: 0 24px; }
+
+        /* ---------- Page header ---------- */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+        .page-title { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+        .page-title .count { font-size: 16px; color: var(--muted); font-weight: 400; }
+        .subtitle { color: var(--muted); font-size: 14px; margin-top: 4px; }
+        .back-link { color: var(--muted); font-size: 14px; text-decoration: none; }
+        .back-link:hover { color: var(--primary); }
+
+        /* ---------- Buttons ---------- */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 10px 18px; border-radius: 9px; font-size: 14px; font-weight: 600;
+            cursor: pointer; text-decoration: none; border: 1px solid transparent;
+            transition: background 0.15s, box-shadow 0.15s, border-color 0.15s, transform 0.05s;
+            white-space: nowrap;
+        }
+        .btn:active { transform: translateY(1px); }
+        .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 1px 2px rgba(79,70,229,0.25); }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+        .btn-secondary:hover { background: #f4f5fa; border-color: #cdd2e0; }
+        .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 7px; }
+        .btn-success { background: var(--success-bg); color: var(--success-fg); }
+        .btn-success:hover { background: #d8f3e6; }
+        .btn-danger { background: var(--danger-bg); color: var(--danger-fg); }
+        .btn-danger:hover { background: #fbdede; }
+
+        /* ---------- Cards ---------- */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+        .card.flush { padding: 0; overflow: hidden; }
+
+        /* ---------- Messages / alerts ---------- */
         .messages { margin-bottom: 20px; }
-        .message-success { background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; padding: 12px 16px; border-radius: 6px; margin-bottom: 8px; }
-        .message-error { background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px 16px; border-radius: 6px; margin-bottom: 8px; }
-        .message-warning { background: #fffbeb; border: 1px solid #f59e0b; color: #92400e; padding: 12px 16px; border-radius: 6px; margin-bottom: 8px; }
+        .alert { padding: 12px 16px; border-radius: 10px; margin-bottom: 10px; font-size: 14px; border: 1px solid transparent; }
+        .alert-success, .message-success { background: var(--success-bg); border-color: #b8ecd2; color: var(--success-fg); }
+        .alert-error, .message-error     { background: var(--danger-bg);  border-color: #f3c9c5; color: var(--danger-fg); }
+        .alert-warning, .message-warning { background: var(--warn-bg);    border-color: #f3d9a6; color: var(--warn-fg); }
+        .alert-info, .message-info       { background: var(--info-bg);    border-color: #c3d4f7; color: var(--info-fg); }
+
+        /* ---------- Tables ---------- */
+        .table { width: 100%; border-collapse: collapse; }
+        .table th {
+            padding: 13px 20px; text-align: left; font-size: 12px; font-weight: 600;
+            color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border); background: #fbfbfe;
+        }
+        .table td { padding: 15px 20px; font-size: 14px; border-bottom: 1px solid var(--border); }
+        .table tbody tr:last-child td { border-bottom: none; }
+        .table tbody tr { transition: background 0.12s; }
+        .table tbody tr:hover { background: #fafbff; }
+        .table .name { font-weight: 600; }
+        .table .muted { color: var(--muted); }
+
+        /* ---------- Badges ---------- */
+        .badge { display: inline-block; padding: 4px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
+        .badge-success { background: var(--success-bg); color: var(--success-fg); }
+        .badge-danger  { background: var(--danger-bg);  color: var(--danger-fg); }
+        .badge-warn    { background: var(--warn-bg);    color: var(--warn-fg); }
+        .badge-info    { background: var(--info-bg);    color: var(--info-fg); }
+        .badge-muted   { background: #f1f3f8;           color: #64748b; }
+
+        /* ---------- Forms ---------- */
+        .form-narrow { max-width: 640px; }
+        .form-group { margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+        .form-label .optional { color: var(--muted); font-weight: 400; }
+        .required { color: var(--danger-fg); }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border-strong);
+            border-radius: 9px; font-size: 14px; font-family: inherit; color: var(--text);
+            background: var(--surface); transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft);
+        }
+        .form-textarea { resize: vertical; }
+        .form-hint { font-size: 12px; color: var(--muted); margin: 0; }
+        .form-actions { display: flex; gap: 12px; }
+
+        .field-chips { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; }
+        .field-chip {
+            padding: 5px 11px; font-size: 12px; font-weight: 500; border: 1px solid var(--border-strong);
+            border-radius: 999px; background: #f7f8fc; color: var(--text); cursor: pointer; transition: background 0.15s, border-color 0.15s;
+        }
+        .field-chip:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+
+        /* ---------- Stat cards ---------- */
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); text-align: center; }
+        .stat-value { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+        .stat-label { color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+        /* ---------- Empty state ---------- */
+        .empty-state { text-align: center; padding: 60px 24px; }
+        .empty-state p { color: var(--muted); font-size: 16px; margin-bottom: 20px; }
+
+        /* ---------- Detail rows ---------- */
+        .detail-table { width: 100%; border-collapse: collapse; }
+        .detail-table td { padding: 11px 0; font-size: 14px; border-bottom: 1px solid var(--border); }
+        .detail-table tr:last-child td { border-bottom: none; }
+        .detail-table td:first-child { color: var(--muted); width: 200px; }
+
+        @media (max-width: 720px) {
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .form-row { grid-template-columns: 1fr; }
+            nav { padding: 12px 18px; flex-wrap: wrap; gap: 8px; }
+        }
     </style>
 </head>
 <body>
     <nav>
-        <h1>📱 SMS Campaign Manager</h1>
-        <div>
+        <span class="brand">📱 SMS Campaign Manager</span>
+        <div class="links">
             <a href="/">Dashboard</a>
             <a href="/campaigns/new/">New Campaign</a>
             <a href="/contacts/">Contacts</a>
@@ -38,7 +197,7 @@
         {% if messages %}
         <div class="messages">
             {% for message in messages %}
-            <div class="message-{{ message.tags }}">{{ message }}</div>
+            <div class="alert message-{{ message.tags }}">{{ message }}</div>
             {% endfor %}
         </div>
         {% endif %}
