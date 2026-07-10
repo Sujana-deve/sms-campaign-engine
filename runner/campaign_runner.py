@@ -98,10 +98,14 @@ def run_campaign(campaign_id, template, filters=None):
         job_queue.load(sms_messages)
 
         # Step 6: Setup gateway and rate limiter
-        if GATEWAY_MODE == 'sparrow':
+        if GATEWAY_MODE == 'ntc':
+            from gateway.gateway_ntc import NTCGateway
+            gateway = NTCGateway()
+            print("Step 6: Gateway — NTC SMS Alert (live)")
+        elif GATEWAY_MODE == 'sparrow':
             from gateway.sparrow_gateway import SparrowGateway
             gateway = SparrowGateway()
-            print("Step 6: Gateway — Sparrow (live)")
+            print("Step 6: Gateway — Sparrow (live, fallback)")
         else:
             from gateway.simulate_gateway import SimulateGateway
             gateway = SimulateGateway()
