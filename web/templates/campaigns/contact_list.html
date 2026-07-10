@@ -90,6 +90,29 @@
         </tbody>
     </table>
 </div>
+
+{% if contacts.paginator.num_pages > 1 %}
+<div class="pagination" style="display:flex; gap:8px; align-items:center; justify-content:center; padding:18px 0;">
+    {% if contacts.has_previous %}
+        <a href="?{% if filter_string %}{{ filter_string }}&{% endif %}page=1" class="btn btn-secondary btn-sm">« First</a>
+        <a href="?{% if filter_string %}{{ filter_string }}&{% endif %}page={{ contacts.previous_page_number }}" class="btn btn-secondary btn-sm">‹ Prev</a>
+    {% endif %}
+
+    {% for num in contacts.paginator.page_range %}
+        {% if num == contacts.number %}
+            <span class="btn btn-primary btn-sm">{{ num }}</span>
+        {% elif num > contacts.number|add:"-3" and num < contacts.number|add:"3" %}
+            <a href="?{% if filter_string %}{{ filter_string }}&{% endif %}page={{ num }}" class="btn btn-secondary btn-sm">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if contacts.has_next %}
+        <a href="?{% if filter_string %}{{ filter_string }}&{% endif %}page={{ contacts.next_page_number }}" class="btn btn-secondary btn-sm">Next ›</a>
+        <a href="?{% if filter_string %}{{ filter_string }}&{% endif %}page={{ contacts.paginator.num_pages }}" class="btn btn-secondary btn-sm">Last »</a>
+    {% endif %}
+</div>
+{% endif %}
+
 {% else %}
 <div class="card empty-state">
     <p>No contacts found.</p>

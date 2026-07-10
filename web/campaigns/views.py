@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages as django_messages
 from django.http import HttpResponse
+from django.core.paginator import Paginator
 from .models import Campaign, CampaignLog, Contact
 import sys
 import os
@@ -251,6 +252,7 @@ def contact_list(request):
     city = request.GET.get('city', '').strip()
     category = request.GET.get('category', '').strip()
     status = request.GET.get('status', 'active').strip()
+    page_number = request.GET.get('page', 1)
 
     contacts = Contact.objects.all()
 
@@ -270,18 +272,33 @@ def contact_list(request):
     elif status == 'inactive':
         contacts = contacts.filter(is_active=False)
 
+    # order_by is required before pagination — Postgres gives no row-order
+    # guarantee otherwise, which means duplicate/skipped rows across pages.
+    contacts = contacts.order_by('business_name')
+
+    total = contacts.count()
+
+    paginator = Paginator(contacts, 25)
+    contacts_page = paginator.get_page(page_number)
+
+    # Carry active filters into pagination links so page 2+ doesn't drop them.
+    params = request.GET.copy()
+    params.pop('page', None)
+    filter_string = params.urlencode()
+
     cities = Contact.objects.values_list('city', flat=True).distinct().exclude(city=None).order_by('city')
     categories = Contact.objects.values_list('category', flat=True).distinct().exclude(category=None).order_by('category')
 
     return render(request, 'campaigns/contact_list.html', {
-        'contacts': contacts,
+        'contacts': contacts_page,
         'cities': cities,
         'categories': categories,
         'query': query,
         'selected_city': city,
         'selected_category': category,
         'selected_status': status,
-        'total': contacts.count(),
+        'total': total,
+        'filter_string': filter_string,
     })
 
 
