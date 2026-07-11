@@ -41,7 +41,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'campaigns',
+    'payments',
 ]
+# eSewa ePay v2 — sandbox test credentials, documented publicly by eSewa
+# for testing. Swap for live MERCHANT_CODE/SECRET_KEY only at go-live.
+ESEWA_PRODUCT_CODE = os.environ.get('ESEWA_PRODUCT_CODE', 'EPAYTEST')
+ESEWA_SECRET_KEY = os.environ.get('ESEWA_SECRET_KEY', '8gBm/:&EnhH.1/q')
+ESEWA_FORM_URL = os.environ.get('ESEWA_FORM_URL', 'https://rc-epay.esewa.com.np/api/epay/main/v2/form')
+ESEWA_STATUS_CHECK_URL = os.environ.get('ESEWA_STATUS_CHECK_URL', 'https://rc.esewa.com.np/api/epay/transaction/status/')
+ESEWA_SUCCESS_URL = os.environ.get('ESEWA_SUCCESS_URL', 'http://127.0.0.1:8000/payments/success/')
+ESEWA_FAILURE_URL = os.environ.get('ESEWA_FAILURE_URL', 'http://127.0.0.1:8000/payments/failure/')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
