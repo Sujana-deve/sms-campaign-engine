@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages as django_messages
 from django.http import HttpResponse
 from django.core.paginator import Paginator
+from django.db import transaction, IntegrityError
 from .models import Campaign, CampaignLog, Contact
 import sys
 import os
@@ -61,11 +62,13 @@ def new_campaign(request):
             filters['category'] = category
 
         try:
-            campaign = Campaign.objects.create(
-                name=name,
-                template=template,
-                segment_filter=filters if filters else {}
-            )
+            with transaction.atomic():
+                campaign = Campaign.objects.create(
+                    name=name,
+                    template=template,
+                    segment_filter=filters if filters else {},
+                    status='running',  # reserved atomically — DB constraint blocks a second concurrent 'running' row
+                )
 
             thread = threading.Thread(
                 target=run_campaign,
@@ -80,6 +83,16 @@ def new_campaign(request):
 
             django_messages.success(request, f'Campaign "{name}" launched. Check dashboard for status.')
             return redirect('dashboard')
+
+        except IntegrityError:
+            django_messages.error(
+                request,
+                'A campaign is already running. Wait for it to finish before launching another.'
+            )
+            return render(request, 'campaigns/new_campaign.html', {
+                'cities': cities,
+                'categories': categories,
+            })
 
         except Exception as e:
             django_messages.error(request, f'Failed to launch campaign: {str(e)}')

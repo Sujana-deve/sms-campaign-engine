@@ -15,6 +15,13 @@ class Campaign(models.Model):
     class Meta:
         db_table = 'campaigns'
         ordering = ['-created_at']
+        constraints = [
+           models.UniqueConstraint(
+            fields=['status'],
+            condition=models.Q(status='running'),
+            name='unique_running_campaign',
+        ),
+    ]
 
     def __str__(self):
         return self.name
