@@ -4,5 +4,6 @@ import campaigns.urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('payments/', include('payments.urls')),
     path('', include(campaigns.urls)),
 ]
