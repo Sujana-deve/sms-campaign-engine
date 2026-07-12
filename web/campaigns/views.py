@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages as django_messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from django.db import transaction, IntegrityError
 from .models import Campaign, CampaignLog, Contact
@@ -24,6 +24,71 @@ COLUMN_MAP = {
 }
 
 REQUIRED_COLUMNS = {'Business Name', 'Phone'}
+
+
+def preview_message(request):
+    """
+    AJAX endpoint for the New Campaign form. Renders the template against
+    ONE sample contact so the user can sanity-check formatting before
+    launching. This is a single-contact spot-check, not a full validation
+    of every contact in the eventual batch — a field blank on some other
+    contact won't be caught here.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    template = request.POST.get('template', '')
+    city = request.POST.get('city', '').strip()
+    category = request.POST.get('category', '').strip()
+
+    if not template:
+        return JsonResponse({'rendered': '', 'contact_used': None})
+
+    contacts = Contact.objects.filter(is_active=True)
+    if city:
+        contacts = contacts.filter(city=city)
+    if category:
+        contacts = contacts.filter(category=category)
+
+    sample = contacts.first()
+
+    if sample:
+        contact_dict = {
+            'business_name': sample.business_name,
+            'owner_name': sample.owner_name or '',
+            'city': sample.city or '',
+            'category': sample.category or '',
+            'phone': sample.phone,
+            'email': sample.email or '',
+        }
+        contact_label = f"{sample.business_name} ({sample.phone})"
+    else:
+        # No matching contact yet — fall back to obviously-fake sample data
+        # so the preview still works, clearly labeled so it's not mistaken
+        # for a real contact.
+        contact_dict = {
+            'business_name': 'Sample Business',
+            'owner_name': 'Sample Owner',
+            'city': 'Sample City',
+            'category': 'sample',
+            'phone': '9800000000',
+            'email': 'sample@example.com',
+        }
+        contact_label = "No matching contact — showing placeholder sample data"
+
+    try:
+        rendered = template.format_map(contact_dict)
+    except KeyError as e:
+        return JsonResponse({
+            'error': f"Unknown placeholder: {e}. Check spelling against the field buttons above.",
+        })
+
+    return JsonResponse({
+        'rendered': rendered,
+        'contact_used': contact_label,
+        'length': len(rendered),
+        'over_limit': len(rendered) > 160,
+    })
 
 
 def dashboard(request):
