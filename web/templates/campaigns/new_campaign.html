@@ -37,12 +37,19 @@
                     <p class="form-hint">Click a field button above to insert it at cursor position.</p>
                     <p id="charCounter" class="form-hint">0 / 160</p>
                 </div>
+
+                <!-- Message Preview -->
+                <div id="previewBox" style="margin-top:14px; padding:12px; border:1px solid #e2e5ea; border-radius:8px; background:#f8f9fb; display:none;">
+                    <p class="form-hint" style="margin-bottom:6px;">Preview:</p>
+                    <p id="previewText" style="margin:0; white-space:pre-wrap;"></p>
+                    <p id="previewMeta" class="form-hint" style="margin-top:8px; margin-bottom:0;"></p>
+                </div>
             </div>
 
             <div class="form-row" style="margin-bottom:24px;">
                 <div>
                     <label class="form-label">Filter by City <span class="optional">(optional)</span></label>
-                    <select name="city" class="form-select">
+                    <select name="city" id="filterCity" class="form-select" onchange="updatePreview()">
                         <option value="">All Cities</option>
                         {% for city in cities %}
                         <option value="{{ city }}">{{ city }}</option>
@@ -51,7 +58,7 @@
                 </div>
                 <div>
                     <label class="form-label">Filter by Category <span class="optional">(optional)</span></label>
-                    <select name="category" class="form-select">
+                    <select name="category" id="filterCategory" class="form-select" onchange="updatePreview()">
                         <option value="">All Categories</option>
                         {% for category in categories %}
                         <option value="{{ category }}">{{ category }}</option>
@@ -75,10 +82,8 @@
         const end = textarea.selectionEnd;
         const text = textarea.value;
 
-        // Insert at cursor position
         textarea.value = text.substring(0, start) + field + text.substring(end);
 
-        // Move cursor to after inserted field
         textarea.selectionStart = start + field.length;
         textarea.selectionEnd = start + field.length;
         textarea.focus();
@@ -93,12 +98,71 @@
         counter.textContent = len + ' / 160';
 
         if (len > 160) {
-            counter.style.color = '#c0362c'; // red over limit
+            counter.style.color = '#c0362c';
         } else if (len > 140) {
-            counter.style.color = '#b7791f'; // orange approaching limit
+            counter.style.color = '#b7791f';
         } else {
-            counter.style.color = '#8a93a6'; // default grey
+            counter.style.color = '#8a93a6';
         }
+
+        updatePreview();
+    }
+
+    let previewDebounce;
+    function updatePreview() {
+        clearTimeout(previewDebounce);
+        previewDebounce = setTimeout(fetchPreview, 400);
+    }
+
+    function getCookie(name) {
+        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? match[2] : null;
+    }
+
+    function fetchPreview() {
+        const template = document.getElementById('messageTemplate').value;
+        const previewBox = document.getElementById('previewBox');
+        const previewText = document.getElementById('previewText');
+        const previewMeta = document.getElementById('previewMeta');
+
+        if (!template.trim()) {
+            previewBox.style.display = 'none';
+            return;
+        }
+
+        const city = document.getElementById('filterCity').value;
+        const category = document.getElementById('filterCategory').value;
+
+        const params = new URLSearchParams();
+        params.append('template', template);
+        params.append('city', city);
+        params.append('category', category);
+
+        fetch('{% url "preview_message" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: params.toString(),
+        })
+        .then(res => res.json())
+        .then(data => {
+            previewBox.style.display = 'block';
+            if (data.error) {
+                previewText.textContent = data.error;
+                previewText.style.color = '#c0362c';
+                previewMeta.textContent = '';
+                return;
+            }
+            previewText.textContent = data.rendered;
+            previewText.style.color = '#1a1a1a';
+            previewMeta.textContent = `Sample: ${data.contact_used} — ${data.length} chars` +
+                (data.over_limit ? ' (over 160, will split into multiple SMS)' : '');
+        })
+        .catch(() => {
+            previewBox.style.display = 'none';
+        });
     }
 </script>
 
