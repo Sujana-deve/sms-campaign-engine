@@ -14,6 +14,22 @@ env/
 # Reports (generated files, not source)
 reports/
 
+# Django
+db.sqlite3
+staticfiles/
+media/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Logs
+*.log
+
+# Editor/IDE
+.vscode/
+.idea/
+
 # OS
 .DS_Store
 Thumbs.db
