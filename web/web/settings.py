@@ -23,7 +23,7 @@ load_dotenv(os.path.join(BASE_DIR.parent, '.env'))
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--j6ixmr82g_pem8$80*5h=c2iz@bip9@h7g99gxp%p#-#@mule'
+SECRET_KEY = os.environ['SECRET_KEY']  # no fallback — fails loudly if .env isn't set up, instead of silently running on a key that's now in chat history
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -132,3 +132,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1

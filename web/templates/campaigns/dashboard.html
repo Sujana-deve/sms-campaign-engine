@@ -37,7 +37,9 @@
             <tr>
                 <td class="name">{{ campaign.name }}</td>
                 <td>
-                    {% if campaign.status == 'running' %}
+                    {% if campaign.status == 'queued' %}
+                    <span class="badge badge-muted">⏳ Queued</span>
+                    {% elif campaign.status == 'running' %}
                     <span class="badge badge-info">⏳ Running</span>
                     {% elif campaign.status == 'completed' %}
                     <span class="badge badge-success">✓ Completed</span>
