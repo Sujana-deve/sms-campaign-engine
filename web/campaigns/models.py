@@ -3,9 +3,16 @@ import uuid
 
 
 class Campaign(models.Model):
+    class Status(models.TextChoices):
+     QUEUED = 'queued', 'Queued'
+     DRAFT = 'draft', 'Draft'
+     RUNNING = 'running', 'Running'
+     COMPLETED = 'completed', 'Completed'
+     FAILED = 'failed', 'Failed'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    status = models.CharField(max_length=50, default='draft')
+    status = models.CharField(max_length=50, choices=Status.choices, default=Status.DRAFT)
     trigger_type = models.CharField(max_length=50, default='manual')
     template = models.TextField()
     segment_filter = models.JSONField(default=dict)
@@ -65,3 +72,4 @@ class Contact(models.Model):
 
     def __str__(self):
         return f"{self.business_name} - {self.phone}"
+    

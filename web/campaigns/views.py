@@ -3,16 +3,18 @@ from django.contrib import messages as django_messages
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from django.db import transaction, IntegrityError
+from decimal import Decimal
 from .models import Campaign, CampaignLog, Contact
 import sys
 import os
-import threading
+from .tasks import run_campaign_task
 import openpyxl
 from openpyxl import Workbook
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from runner.campaign_runner import run_campaign
+from config.settings import SMS_COST_NPR
+from payments.models import Balance, InsufficientBalanceError
 
 COLUMN_MAP = {
     'Business Name': 'business_name',
@@ -96,7 +98,7 @@ def dashboard(request):
     logs = {log.campaign_id: log for log in CampaignLog.objects.order_by('-completed_at')}
     for campaign in campaigns:
         campaign.log = logs.get(campaign.id)
-    has_running_campaigns = campaigns.filter(status='running').exists()
+    has_running_campaigns = campaigns.filter(status__in=['running', 'queued']).exists()
     return render(request, 'campaigns/dashboard.html', {
         'campaigns': campaigns,
         'has_running_campaigns': has_running_campaigns,
@@ -126,27 +128,56 @@ def new_campaign(request):
         if category:
             filters['category'] = category
 
+        # Cost estimate — same active/city/category filter preview_message()
+        # uses. This is a ceiling, not an exact figure: if campaign_runner.py
+        # excludes additional contacts (e.g. an opt-out check not reflected
+        # here), the real cost will be <= this estimate, never more.
+        target_contacts = Contact.objects.filter(is_active=True)
+        if city:
+            target_contacts = target_contacts.filter(city=city)
+        if category:
+            target_contacts = target_contacts.filter(category=category)
+        contact_count = target_contacts.count()
+        estimated_cost = Decimal(contact_count) * Decimal(str(SMS_COST_NPR))
+
         try:
             with transaction.atomic():
+                balance = Balance.get_locked_singleton()
+
+                if not balance.has_sufficient(estimated_cost):
+                    shortfall = estimated_cost - balance.current_balance
+                    django_messages.error(
+                        request,
+                        f'Insufficient balance: campaign needs Rs. {estimated_cost}, '
+                        f'balance is Rs. {balance.current_balance}, short by Rs. {shortfall}. '
+                        f'Top up before launching.'
+                    )
+                    return render(request, 'campaigns/new_campaign.html', {
+                        'cities': cities,
+                        'categories': categories,
+                    })
+
                 campaign = Campaign.objects.create(
                     name=name,
                     template=template,
                     segment_filter=filters if filters else {},
-                    status='running',  # reserved atomically — DB constraint blocks a second concurrent 'running' row
+                    status=Campaign.Status.QUEUED,
                 )
 
-            thread = threading.Thread(
-                target=run_campaign,
-                kwargs={
-                    'campaign_id': str(campaign.id),
-                    'template': template,
-                    'filters': filters if filters else None,
-                },
-                daemon=True
-            )
-            thread.start()
+                # Deducted at queue time, same as before — balance is reserved
+                # up front regardless of when the worker actually picks this up.
+                balance.deduct(estimated_cost, reference=str(campaign.id))
 
-            django_messages.success(request, f'Campaign "{name}" launched. Check dashboard for status.')
+            run_campaign_task.delay(
+                campaign_id=str(campaign.id),
+                template=template,
+                filters=filters if filters else None,
+            )
+
+            django_messages.success(
+                request,
+                f'Campaign "{name}" launched. Rs. {estimated_cost} reserved from balance. Check dashboard for status.'
+            )
             return redirect('dashboard')
 
         except IntegrityError:
@@ -154,6 +185,15 @@ def new_campaign(request):
                 request,
                 'A campaign is already running. Wait for it to finish before launching another.'
             )
+            return render(request, 'campaigns/new_campaign.html', {
+                'cities': cities,
+                'categories': categories,
+            })
+
+        except InsufficientBalanceError as e:
+            # Defensive only — has_sufficient() is checked above under the
+            # same row lock, so this shouldn't trigger in practice.
+            django_messages.error(request, f'Balance check failed: {str(e)}')
             return render(request, 'campaigns/new_campaign.html', {
                 'cities': cities,
                 'categories': categories,
